@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mailroom | Sign in</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="centered">
+  <main class="card login-card">
+    <div class="eyebrow">MAILROOM</div>
+    <h1>Send from your Gmail.</h1>
+    <p class="muted">Sign in, add your recipients and message, then send directly from the account you choose.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <a class="button google-button" href="{{ url_for('login') }}">Continue with Google</a>
+    <p class="fine-print">Only Gmail send access is requested. Your address is never manually entered.</p>
+  </main>
+</body>
+</html>

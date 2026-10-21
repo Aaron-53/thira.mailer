@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mailroom | Compose</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">MAILROOM</a>
+    <div class="account">
+      <span>{{ account_email }}</span>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="link-button" type="submit">Sign out</button>
+      </form>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="page-heading">
+      <div>
+        <div class="eyebrow">NEW CAMPAIGN</div>
+        <h1>Compose and send</h1>
+      </div>
+      <p class="muted">Sending from <strong>{{ account_email }}</strong></p>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('preview') }}" class="workspace" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <section class="card">
+        <label for="subject">Subject</label>
+        <input id="subject" name="subject" value="{{ subject }}" placeholder="Your email subject" required>
+        <label for="template">HTML template</label>
+        <textarea id="template" name="template" rows="16" placeholder="<p>Hi {{'{{'}}name{{'}}'}},</p>">{{ template }}</textarea>
+        <label class="file-label" for="template_file">Or choose an HTML file</label>
+        <input id="template_file" name="template_file" type="file" accept=".html,.htm,.txt">
+        <p class="hint">Use variables like <code>{{'{{'}}name{{'}}'}}</code>. They are replaced from matching CSV columns.</p>
+        {% if variables is defined %}
+          <div class="variable-list">
+            <span class="label-small">Detected variables</span>
+            {% for variable in variables %}<code>{{ variable }}</code>{% else %}<span class="muted">None</span>{% endfor %}
+          </div>
+        {% endif %}
+      </section>
+      <section class="card">
+        <label for="recipients">Recipient list (CSV)</label>
+        <textarea id="recipients" name="recipients" rows="16" placeholder="email,name&#10;person@example.com,Alex">{{ recipients }}</textarea>
+        <label class="file-label" for="recipient_file">Or choose a CSV file</label>
+        <input id="recipient_file" name="recipient_file" type="file" accept=".csv,text/csv">
+        <p class="hint">Include an <code>email</code> column. Add any columns used by your template.</p>
+        {% if fieldnames is defined %}
+          <div class="variable-list">
+            <span class="label-small">CSV columns</span>
+            {% for field in fieldnames %}<code>{{ field }}</code>{% endfor %}
+          </div>
+        {% endif %}
+      </section>
+      <div class="actions">
+        <button class="button secondary" type="submit">Preview recipients</button>
+        {% if recipient_rows is defined %}
+          <button class="button" type="submit" formaction="{{ url_for('send') }}">Send {{ recipient_rows|length }} message{% if recipient_rows|length != 1 %}s{% endif %}</button>
+        {% endif %}
+      </div>
+    </form>
+    {% if preview_html is defined %}
+      <section class="card preview">
+        <div class="section-title"><h2>Preview</h2><span>First recipient</span></div>
+        <div class="preview-frame">{{ preview_html|safe }}</div>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>
