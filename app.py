@@ -131,14 +131,18 @@ def parse_recipients(raw_csv):
     reader = csv.DictReader(io.StringIO(raw_csv.strip()))
     if not reader.fieldnames:
         raise ValueError("Add a CSV header row and at least one recipient.")
-    fieldnames = [field.strip() for field in reader.fieldnames]
+    fieldnames = [field.strip().lower() for field in reader.fieldnames]
+    if any(not field for field in fieldnames):
+        raise ValueError("Every CSV column must have a header.")
+    if len(fieldnames) != len(set(fieldnames)):
+        raise ValueError("CSV headers must be unique, ignoring capitalization.")
     if "email" not in fieldnames:
         raise ValueError("The CSV must contain an 'email' column.")
 
     recipients = []
     for row in reader:
         normalized = {
-            (key.strip() if key else ""): (value or "").strip()
+            (key.strip().lower() if key else ""): (value or "").strip()
             for key, value in row.items()
         }
         if normalized.get("email"):
@@ -157,7 +161,7 @@ def read_text_input(form_name, file_name):
 
 def personalize(template, recipient):
     def replace(match):
-        return recipient.get(match.group(1), match.group(0))
+        return recipient.get(match.group(1).lower(), match.group(0))
 
     return EMAIL_PATTERN.sub(replace, template)
 
